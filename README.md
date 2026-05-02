@@ -4,7 +4,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/rekabamine91-lgtm/al-mizan-protocol/actions/workflows/python-tests.yml/badge.svg)](https://github.com/rekabamine91-lgtm/al-mizan-protocol/actions/workflows/python-tests.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-2605.xxxxx-red.svg)](https://arxiv.org/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.1234567-blue.svg)](https://doi.org/10.5281/zenodo.1234567)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
@@ -14,7 +13,7 @@
 
 ## 🌐 Overview
 
-**Al-Mizan Protocol** is a foundational framework designed to integrate distributive justice (**Al-Qist**) directly into the mathematical core of Artificial Intelligence.
+**Al-Mizan Protocol** is a foundational framework designed to integrate distributive justice (**Al-Qist**) directly into the mathematical core of Artificial Intelligence. 
 
 Unlike standard bias-correction methods that act as external wrappers (AIF360, Fairlearn, What-If Tool), Al-Mizan operates within the **differential logic** of neural networks. It treats each variable as a **responsible entity** with historical integrity, self-regulation capabilities, and a mechanism for redistributive justice.
 
