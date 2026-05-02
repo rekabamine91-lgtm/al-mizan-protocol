@@ -2,6 +2,10 @@
 
 **Constitutional Autograd for Digital Sovereignty**
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![arXiv](https://img.shields.io/badge/arXiv-coming_soon-red.svg)](https://arxiv.org/)
+
 > *"Al-Mizan is not a policy; it is a mathematical guarantee of Digital Sovereignty."*
 
 ## 🏛️ Why Al-Mizan?
