@@ -462,3 +462,42 @@ with tab5:
     |---------|------------------------------|----------|
     | Variable Memory | None | TyrannyCount |
     | Fairness | Post-hoc wrapper | **In-kernel constitutional** |
+    | Transparency | Black box | **Audit trail** |
+    | Minority Protection | None | **Adaptive Zakat** |
+    
+    ### Comparison with Karpathy's micrograd
+    
+    Andrej Karpathy's micrograd brilliantly demonstrates **how** autograd works. 
+    Al-Mizan answers **why** and **for what purpose**:
+    
+    - **Karpathy**: "Here's how to compute gradients"
+    - **Al-Mizan**: "Here's how to compute **just** gradients"
+    
+    ### Get Involved
+    
+    - 📄 [Read the Whitepaper](https://arxiv.org/abs/xxxx.xxxxx)
+    - 💻 [GitHub Repository](https://github.com/rekabamine91-lgtm/al-mizan-protocol)
+    - 📧 Contact: [your-email]
+    
+    ### Citation
+    
+    ```bibtex
+    @misc{almizan2026constitutional,
+      title={Al-Mizan Protocol: Constitutional Autograd for Digital Sovereignty},
+      author={[Your Name]},
+      year={2026},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+    }
+    ```
+    """)
+    
+    st.markdown("---")
+    st.markdown("*Built with 🌙 and ⚖️ for a just digital future*")
+
+# Footer
+st.markdown("---")
+st.markdown(
+    "<center><small>Al-Mizan Protocol v1.2.2 Constitutional | Digital Sovereignty is a Mathematical Guarantee</small></center>",
+    unsafe_allow_html=True
+)
