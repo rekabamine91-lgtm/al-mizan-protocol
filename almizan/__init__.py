@@ -1,6 +1,10 @@
 """
-Al-Mizan Protocol Package
-This file enables Python to treat the directory as a package.
+Al-Mizan Protocol: Socio-Algebraic Justice in AI
+Version: 1.0.0
 """
 
-__version__ = "0.1.0"
+from .engine import MizanValue
+from .zakat_manager import ZakatOrchestrator
+
+__version__ = "1.0.0"
+__all__ = ["MizanValue", "ZakatOrchestrator"]
