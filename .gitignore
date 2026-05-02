@@ -1,8 +1,270 @@
+# ============================================================================
+# Al-Mizan Protocol - .gitignore
+# Constitutional Autograd for Digital Sovereignty
+# ============================================================================
+# This file tells Git which files and directories to ignore.
+# Maintains repository cleanliness and prevents committing:
+#   - Temporary files
+#   - Build artifacts
+#   - Virtual environments
+#   - Sensitive data
+#   - IDE configurations
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Python Cache and Compiled Files
+# ----------------------------------------------------------------------------
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
 *.pyc
+
+# ----------------------------------------------------------------------------
+# Distribution / Packaging (Build Artifacts)
+# ----------------------------------------------------------------------------
+build/
+dist/
+local_path.txt
+*.egg-info/
+*.egg
+MANIFEST
+.eggs/
+develop-eggs/
+downloads/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# ----------------------------------------------------------------------------
+# Unit Test / Coverage Reports
+# ----------------------------------------------------------------------------
+.cache
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.benchmarks/
+
+# ----------------------------------------------------------------------------
+# Virtual Environments (Local Development)
+# ----------------------------------------------------------------------------
+venv/
+env/
 .env
-streamlit/
+.venv
+ENV/
+env.bak/
+venv.bak/
+.env.*
+*.pyenv/
+
+# ----------------------------------------------------------------------------
+# Streamlit Dashboard Files
+# ----------------------------------------------------------------------------
+.streamlit/
+.streamlit/secrets.toml    # Never commit secrets!
+
+# ----------------------------------------------------------------------------
+# IDE and Editor Files
+# ----------------------------------------------------------------------------
+# Visual Studio Code
+.vscode/
+.history/
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+*.sublime-*
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.~*
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Spyder
+.spyproject/
+
+# ----------------------------------------------------------------------------
+# Jupyter Notebooks (if used)
+# ----------------------------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb
+*.ipynb_checkpoints
+*.pynb
+
+# ----------------------------------------------------------------------------
+# OS Generated Files
+# ----------------------------------------------------------------------------
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ICON
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.exe
+
+# Linux
+.directory
+*.part
+*~
+
+# ----------------------------------------------------------------------------
+# Documentation Build (if generating HTML from LaTeX/Markdown)
+# ----------------------------------------------------------------------------
+docs/_build/
+paper/_build/
+*.aux
 *.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# ----------------------------------------------------------------------------
+# Data Files and Generated Outputs
+# ----------------------------------------------------------------------------
+# Simulation outputs
 *.png
-!almizan_simulation.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.webm
+
+# Data files (if any)
+*.csv
+*.xlsx
+*.parquet
+*.h5
+*.db
+*.sqlite
+
+# Model checkpoints (if added later)
+*.pkl
+*.pickle
+*.joblib
+*.hdf5
+*.pt
+*.pth
+*.bin
+
+# ----------------------------------------------------------------------------
+# Logs and Temporary Files
+# ----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+logs/
+log/
+
+# ----------------------------------------------------------------------------
+# Sensitive Information (Never Commit!)
+# ----------------------------------------------------------------------------
+# API keys, secrets, tokens
+*.key
+*.pem
+*.crt
+*.csr
+secrets.txt
+.secrets
+config.local.py
+.env.local
+.env.production
+
+# ----------------------------------------------------------------------------
+# Project-Specific Exclusions
+# ----------------------------------------------------------------------------
+# Local development scripts (not versioned)
+local_test.py
+dev_*.py
+sandbox/
+scratch/
+experiments/
+playground/
+
+# Local configuration (not versioned)
+config_local.py
+settings_local.py
+.local_settings
+
+# ----------------------------------------------------------------------------
+# Backup Files
+# ----------------------------------------------------------------------------
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+# ----------------------------------------------------------------------------
+# Archive Files (not needed in repo)
+# ----------------------------------------------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# ============================================================================
+# Notes:
+# ============================================================================
+# 1. The `docs/zakat_demo.gif` output is excluded to keep the repo small.
+#    The demo GIF is generated locally and not tracked.
+#
+# 2. Streamlit secrets (`secrets.toml`) are NEVER committed.
+#    Use environment variables for sensitive data.
+#
+# 3. LaTeX build artifacts (*.aux, *.log, etc.) are excluded to keep
+#    the paper/ directory clean.
+#
+# 4. All virtual environments and IDE folders are excluded to prevent
+#    platform-specific artifacts from polluting the repository.
+#
+# 5. Add your local development folders to the project-specific section.
+# ============================================================================
