@@ -1,1 +1,18 @@
-https://orcid.org/0000-0000-0000-0000
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Rekab
+    given-names: Amine
+title: "The Al-Mizan Protocol"
+version: 1.2.2
+date-released: 2026-05-02
+url: "https://github.com/rekabamine91-lgtm/al-mizan-protocol"
+license: Apache-2.0
+repository-code: "https://github.com/rekabamine91-lgtm/al-mizan-protocol"
+abstract: "A constitutional autograd engine that embeds digital justice and socio-algebraic equilibrium into the backward pass, ensuring algorithmic sovereignty."
+keywords:
+  - autograd
+  - fairness
+  - deep-learning
+  - constitutional-ai
+  - digital-sovereignty
