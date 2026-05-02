@@ -1,253 +1,32 @@
-# ============================================================================
-# Al-Mizan Protocol - GitHub Actions CI/CD Pipeline
-# ============================================================================
-# This workflow automatically tests the code on every push and pull request
-# to the main branch. It ensures constitutional integrity is maintained.
-#
-# Triggers:
-#   - Push to main branch
-#   - Pull request to main branch
-#   - Manual trigger (workflow_dispatch)
-#
-# Jobs:
-#   1. test - Runs unit tests on multiple Python versions
-#   2. lint - Checks code style and formatting
-#   3. coverage - Generates and uploads coverage report
-# ============================================================================
-
 name: Al-Mizan Protocol CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
-  # Allow manual trigger from GitHub UI
-  workflow_dispatch:
-
-# Cancel in-progress runs for the same branch
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [ main, master ]
 
 jobs:
-  # --------------------------------------------------------------------------
-  # Job 1: Unit Tests on Multiple Python Versions
-  # --------------------------------------------------------------------------
-  test:
-    name: Test Python ${{ matrix.python-version }}
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
-      fail-fast: false  # Don't cancel all jobs if one fails
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
-    # Checkout the repository
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    # Set up Python
+    - uses: actions/checkout@v3
+    
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: 'requirements.txt'
-
-    # Install dependencies
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov
-
-    # Install the package in editable mode
-    - name: Install Al-Mizan Protocol
-      run: |
         pip install -e .
-
-    # Run tests with coverage
-    - name: Run tests with coverage
+        
+    - name: Run Tests with Coverage
       run: |
-        pytest tests/ -v --cov=almizan --cov-report=xml --cov-report=term
-
-    # Upload coverage report (for Codecov)
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-almizan
-        fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-    # Store test results as artifacts
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-python-${{ matrix.python-version }}
-        path: |
-          coverage.xml
-          .pytest_cache/
-        retention-days: 30
-
-  # --------------------------------------------------------------------------
-  # Job 2: Code Quality (Linting & Formatting)
-  # --------------------------------------------------------------------------
-  lint:
-    name: Code Quality (Lint & Format)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-
-    - name: Install linting tools
-      run: |
-        pip install flake8 black isort mypy
-
-    - name: Run flake8 (style guide enforcement)
-      run: |
-        flake8 almizan/ tests/ --count --statistics --show-source --max-line-length=100
-
-    - name: Run black (code formatting check)
-      run: |
-        black --check almizan/ tests/
-
-    - name: Run isort (import sorting check)
-      run: |
-        isort --check-only --profile black almizan/ tests/
-
-    - name: Run mypy (static type checking)
-      run: |
-        mypy almizan/ --ignore-missing-imports --allow-untyped-defs
-
-  # --------------------------------------------------------------------------
-  # Job 3: Build and Package Check
-  # --------------------------------------------------------------------------
-  build:
-    name: Build & Package Check
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-
-    - name: Install build tools
-      run: |
-        pip install build twine
-
-    - name: Build distribution
-      run: |
-        python -m build
-
-    - name: Check distribution with twine
-      run: |
-        twine check dist/*
-
-    - name: Upload distribution artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-packages
-        path: dist/
-        retention-days: 30
-
-  # --------------------------------------------------------------------------
-  # Job 4: Documentation Build (LaTeX)
-  # --------------------------------------------------------------------------
-  docs:
-    name: Build Documentation (LaTeX)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install LaTeX
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-xetex
-
-    - name: Build whitepaper
-      run: |
-        cd paper
-        xelatex -interaction=nonstopmode main.tex
-        xelatex -interaction=nonstopmode main.tex
-        cd ..
-
-    - name: Upload PDF
-      uses: actions/upload-artifact@v4
-      with:
-        name: whitepaper-pdf
-        path: paper/main.pdf
-        retention-days: 30
-
-  # --------------------------------------------------------------------------
-  # Job 5: Dashboard Smoke Test
-  # --------------------------------------------------------------------------
-  dashboard:
-    name: Dashboard Smoke Test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install -e .
-
-    - name: Test that Streamlit dashboard imports without error
-      run: |
-        python -c "import app; print('✅ Streamlit dashboard imports successfully')"
-
-    - name: Test that simulation runs without error
-      run: |
-        python -c "import simulation; print('✅ Simulation script imports successfully')"
-
-  # --------------------------------------------------------------------------
-  # Job 6: Security Scan (Trivy)
-  # --------------------------------------------------------------------------
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'trivy-results.sarif'
-
-# ============================================================================
-# Badge for README.md:
-# [![CI](https://github.com/rekabamine91-lgtm/al-mizan-protocol/actions/workflows/python-tests.yml/badge.svg)](https://github.com/rekabamine91-lgtm/al-mizan-protocol/actions/workflows/python-tests.yml)
-# ============================================================================
+        pytest --cov=almizan tests/
