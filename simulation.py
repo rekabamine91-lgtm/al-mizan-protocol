@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mizan_engine import MizanValue, AlMizanMLP, adaptive_zakat_rate
+from mizan_engine import MizanValue, AlMizanMLP
 
 def run_simulation():
     # XOR dataset
