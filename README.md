@@ -8,11 +8,11 @@
 
 > *"Al-Mizan is not a policy; it is a mathematical guarantee of Digital Sovereignty."*
 
-## 🏛️ Why Al-Mizan?
+## Why Al-Mizan?
 
-Modern AI suffers from **Algorithmic Tyranny**: dominant patterns suppress minorities, no transparency, knowledge monopolies. Al-Mizan embeds justice directly into the autograd kernel.
+Modern AI suffers from **Algorithmic Tyranny**. Al-Mizan embeds justice directly into the autograd kernel.
 
-## ✨ Key Innovations
+## Key Innovations
 
 | Feature | Standard (PyTorch/micrograd) | Al-Mizan |
 |---------|------------------------------|----------|
@@ -22,7 +22,7 @@ Modern AI suffers from **Algorithmic Tyranny**: dominant patterns suppress minor
 | Minority Protection | None | **Adaptive Zakat (τ=1000)** |
 | Gradient Control | Fixed clipping | **Al‑Qist (Self‑regulation)** |
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 git clone https://github.com/rekabamine91-lgtm/al-mizan-protocol.git
