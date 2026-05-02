@@ -1,22 +1,17 @@
 """
 mizan_engine.py - Al-Mizan Protocol Core Engine
 Constitutional Autograd with Digital Justice
-
-Based on whitepaper: Al-Mizan Protocol v1.2.2 Constitutional
-Author: rekabamine91-lgtm
 """
 
 import numpy as np
-from typing import List, Set, Callable, Dict, Optional
+from typing import List, Set, Callable, Dict
 from dataclasses import dataclass, field
 import math
 
 
 @dataclass
 class MizanValue:
-    """
-    The Constitutional Variable - Responsible Entity with Historical Integrity.
-    """
+    """Constitutional variable with historical integrity."""
     data: float
     label: str = ""
     _prev: Set['MizanValue'] = field(default_factory=set)
@@ -31,11 +26,11 @@ class MizanValue:
     zakat_given: float = field(default=0.0, init=False)
     zakat_received: float = field(default=0.0, init=False)
 
-    # Hyperparameters (can be changed globally)
+    # Hyperparameters
     tyranny_threshold: float = 10.0
     zakat_rate: float = 0.025   # 2.5%
-    alpha: float = 0.1          # Tyranny decay factor
-    beta: float = 0.05          # Gradient variance factor
+    alpha: float = 0.1
+    beta: float = 0.05
 
     def __post_init__(self):
         if not isinstance(self.data, (int, float)):
@@ -54,7 +49,6 @@ class MizanValue:
         def _backward():
             self.grad += 1.0 * out.grad
             other.grad += 1.0 * out.grad
-            # Optional: Zakat on addition (if high integrity)
             if self.integrity_score > 0.7:
                 self._pay_zakat(out.grad)
             if other.integrity_score > 0.7:
@@ -75,7 +69,6 @@ class MizanValue:
         def _backward():
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
-            # Zakat on multiplication (if both positive)
             if self.data > 0 and other.data > 0:
                 zakat_amount = (self.data + other.data) * self.zakat_rate
                 self.data -= zakat_amount / 2
@@ -96,12 +89,9 @@ class MizanValue:
         )
 
         def _backward():
-            # d/dx: y * x^(y-1)
             self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
-            # d/dy: x^y * ln(x)
             if self.data > 0:
                 other.grad += out.data * math.log(self.data) * out.grad
-            # Tyranny detection for large gradients
             if abs(self.grad) > self.tyranny_threshold:
                 self.tyranny_count += 1
                 self.integrity_score *= 0.95
@@ -124,7 +114,6 @@ class MizanValue:
         return out
 
     def _pay_zakat(self, gradient_amount: float):
-        """Give away a portion of gradient to poorer neurons."""
         if abs(gradient_amount) > 0:
             zakat = gradient_amount * self.zakat_rate
             self.grad -= zakat
@@ -132,27 +121,21 @@ class MizanValue:
             self.gradient_history.append(('zakat_given', zakat))
 
     def apply_al_qist(self) -> float:
-        """Constitutional anti-tyranny constraint."""
         is_tyrannical = abs(self.grad) > self.tyranny_threshold
         if is_tyrannical:
             self.tyranny_count += 1
-            # Update integrity score as per whitepaper Appendix A.1
             variance = np.var(self.gradient_history[-10:]) if len(self.gradient_history) >= 10 else 0
             self.integrity_score = 1.0 / (1.0 + self.alpha * self.tyranny_count + self.beta * variance)
-            # Dampen the tyrannical gradient
             self.grad *= self.integrity_score
             self.gradient_history.append(('qist_applied', self.grad))
         return self.grad
 
     def receive_zakat(self, amount: float):
-        """Receive redistributed learning capital."""
         self.grad += amount
         self.zakat_received += abs(amount)
         self.gradient_history.append(('zakat_received', amount))
 
     def backward(self):
-        """Constitutional backward pass with Al-Qist."""
-        # Build topological order
         topo = []
         visited = set()
 
@@ -166,13 +149,11 @@ class MizanValue:
         build_topo(self)
         self.grad = 1.0
 
-        # Apply Al-Qist before each backward call
         for node in reversed(topo):
             node.apply_al_qist()
             node._backward()
 
     def get_audit_trail(self) -> Dict:
-        """Return transparency log."""
         return {
             'label': self.label,
             'data': self.data,
@@ -202,7 +183,6 @@ class MizanValue:
 
 
 class JusticeLayer:
-    """A layer of constitutional neurons with collective justice."""
     def __init__(self, n_in: int, n_out: int, layer_name: str = "", zakat_rate: float = 0.025):
         self.neurons = []
         for i in range(n_out):
@@ -213,16 +193,13 @@ class JusticeLayer:
         self.layer_name = layer_name
 
     def forward(self, x: List[MizanValue]) -> List[MizanValue]:
-        # Simplified: each neuron computes weighted sum of inputs (just sum for demo)
         outputs = []
         for neuron in self.neurons:
-            # This is a placeholder – real implementation would use dot product
-            s = sum(x) * neuron
+            s = sum(x) * neuron   # simplified placeholder
             outputs.append(s.relu())
         return outputs
 
     def redistribute_wealth(self):
-        """Collective zakat: from rich to poor neurons."""
         avg_integrity = sum(n.integrity_score for n in self.neurons) / len(self.neurons)
         poor = [n for n in self.neurons if n.integrity_score < avg_integrity * 0.5]
         rich = [n for n in self.neurons if n.integrity_score > avg_integrity * 1.5]
@@ -243,7 +220,6 @@ class JusticeLayer:
 
 
 class AlMizanMLP:
-    """Multi-layer perceptron with constitutional justice."""
     def __init__(self, n_in: int, n_hidden: List[int], zakat_rate: float = 0.025):
         self.layers = []
         prev = n_in
@@ -256,7 +232,6 @@ class AlMizanMLP:
         current = x
         for layer in self.layers:
             current = layer.forward(current)
-        # Return scalar (assuming last layer has 1 neuron)
         return current[0] if isinstance(current, list) and len(current) == 1 else current
 
     def backward(self, loss: MizanValue):
@@ -281,7 +256,6 @@ class AlMizanMLP:
 
 
 def adaptive_zakat_rate(minority_ratio: float, t: int, tau: int = 1000) -> float:
-    """Adaptive Zakat as per whitepaper Appendix C."""
     zeta_base = 0.025
     exponent = -minority_ratio * (t / tau)
     adaptive = zeta_base * (1 + math.exp(exponent))
@@ -289,7 +263,6 @@ def adaptive_zakat_rate(minority_ratio: float, t: int, tau: int = 1000) -> float
 
 
 if __name__ == "__main__":
-    # Quick test
     a = MizanValue(2.0, "a")
     b = MizanValue(3.0, "b")
     c = a * b + a * a
