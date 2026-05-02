@@ -1,371 +1,329 @@
 """
 app.py - Al-Mizan Protocol Interactive Dashboard
-Streamlit-based UI for Constitutional Autograd visualization
+============================================================================
+Streamlit-based dashboard for visualizing constitutional justice in action.
+Tracks gradient redistribution, audit trails, and real-time fairness metrics.
 
 Author: Amine Rekab (@rekabamine91-lgtm)
 Version: 1.0.0 (June 2026)
+============================================================================
 """
 
 import streamlit as st
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import time
-import math
-from almizan.engine import MizanValue, adaptive_zakat_rate
-from almizan.zakat_manager import ZakatOrchestrator
+from almizan import MizanValue, ZakatOrchestrator
 
 # ============================================================================
 # Page Configuration
 # ============================================================================
 st.set_page_config(
-    page_title="Al-Mizan Protocol - Constitutional AI Dashboard",
+    page_title="Al-Mizan Protocol - Constitutional Justice Dashboard",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ============================================================================
-# Custom CSS for better visual appearance
+# Custom CSS for better styling
 # ============================================================================
 st.markdown("""
 <style>
     .main-header {
         font-size: 2.5rem;
-        color: #2E86AB;
+        color: #c5a059;
         text-align: center;
         font-family: 'Traditional Arabic', serif;
     }
     .constitutional-badge {
-        background-color: #2E86AB;
+        background-color: #c5a059;
         color: white;
         padding: 5px 10px;
         border-radius: 15px;
         display: inline-block;
         font-size: 0.8rem;
     }
-    .integrity-high {
-        background-color: #27AE60;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 10px;
-    }
-    .integrity-low {
-        background-color: #E74C3C;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 10px;
-    }
-    .justice-box {
-        border: 2px solid #2E86AB;
-        border-radius: 10px;
+    .justice-quote {
+        background-color: #1e1e2e;
         padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #c5a059;
         margin: 10px 0;
-        background-color: #f8f9fa;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================================================
+# Initialize Session State
+# ============================================================================
+if 'orchestrator' not in st.session_state:
+    st.session_state.orchestrator = ZakatOrchestrator(
+        poverty_threshold=0.4,
+        base_rate=0.025,
+        tau_step=1000,
+        use_entropy=True
+    )
+if 'iteration' not in st.session_state:
+    st.session_state.iteration = 0
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'auto_run' not in st.session_state:
+    st.session_state.auto_run = False
+
+# ============================================================================
 # Header
 # ============================================================================
-st.markdown("<h1 class='main-header'>⚖️ Al-Mizan Protocol: Constitutional AI Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("*Where algorithms learn justice, not just error minimization*")
+st.markdown("<h1 class='main-header'>⚖️ Al-Mizan Protocol: Digital Justice Dashboard</h1>", 
+            unsafe_allow_html=True)
 
 st.markdown("""
-<div class='justice-box'>
-    <b>📜 Constitutional Foundations</b><br>
-    <i>"Al-Mizan is not a policy; it is a mathematical guarantee of Digital Sovereignty."</i><br><br>
-    This interactive dashboard demonstrates how Al-Mizan enforces <b>Al-Qist</b> (anti-tyranny constraint) 
-    and <b>Digital Zakat</b> (knowledge redistribution) inside the neural network's backward pass.
+<div class='justice-quote'>
+    <i>"Al-Mizan is not a policy; it is a mathematical guarantee of Digital Sovereignty."</i><br>
+    This dashboard monitors how "learning capital" (gradients) is redistributed between 
+    rich and poor neurons to prevent algorithmic tyranny.
 </div>
 """, unsafe_allow_html=True)
 
 # ============================================================================
 # Sidebar - Constitutional Settings
 # ============================================================================
-st.sidebar.header("🛠️ Constitutional Settings")
-st.sidebar.markdown("---")
+st.sidebar.header("⚙️ Constitutional Settings")
 
-tau_tyr = st.sidebar.slider(
-    "⚔️ Anti-Tyranny Threshold (τ_tyr)",
-    min_value=1.0, max_value=20.0, value=10.0, step=0.5,
-    help="Gradients exceeding this threshold are considered 'tyrannical' and dampened."
+poverty_thresh = st.sidebar.slider(
+    "Poverty Threshold (θ)", 
+    min_value=0.1, 
+    max_value=1.0, 
+    value=0.4, 
+    step=0.05,
+    help="Neurons with entropy below this threshold receive zakat."
 )
 
 zakat_rate = st.sidebar.slider(
-    "🕌 Digital Zakat Rate (ζ)",
-    min_value=0.01, max_value=0.10, value=0.025, step=0.005,
-    help="Percentage of gradient wealth redistributed from rich to poor neurons (default 2.5%)."
+    "Base Zakat Rate (ζ)", 
+    min_value=0.01, 
+    max_value=0.10, 
+    value=0.025, 
+    step=0.005,
+    help="Percentage of gradient redistributed from rich to poor (2.5% = Islamic zakat)."
 )
 
-poverty_threshold = st.sidebar.slider(
-    "📉 Poverty (Entropy) Threshold (θ)",
-    min_value=0.1, max_value=1.0, value=0.5, step=0.05,
-    help="Neurons with entropy below this threshold are considered 'poor' and receive zakat."
+use_entropy = st.sidebar.checkbox(
+    "Use Entropy for Classification", 
+    value=True,
+    help="Use information entropy to classify rich/poor neurons (vs gradient magnitude)."
 )
 
-alpha = st.sidebar.number_input(
-    "α (Tyranny Count Decay)",
-    min_value=0.01, max_value=0.5, value=0.1, step=0.01,
-    help="Weight for tyranny count in integrity score formula."
-)
-
-beta = st.sidebar.number_input(
-    "β (Gradient Variance Decay)",
-    min_value=0.01, max_value=0.2, value=0.05, step=0.01,
-    help="Weight for gradient variance in integrity score formula."
-)
+st.session_state.orchestrator.poverty_threshold = poverty_thresh
+st.session_state.orchestrator.base_rate = zakat_rate
+st.session_state.orchestrator.use_entropy = use_entropy
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("""
-**📐 Mathematical Foundations**
 
-Integrity Score:
-$$I(v) = \\frac{1}{1 + \\alpha \\cdot TC + \\beta \\cdot Var(G)}$$
+# Reset button
+if st.sidebar.button("♻️ Reset Simulation", type="secondary", use_container_width=True):
+    st.session_state.orchestrator.reset()
+    st.session_state.iteration = 0
+    st.session_state.history = []
+    st.session_state.auto_run = False
+    st.rerun()
 
-Adaptive Zakat:
-$$\\zeta_{adaptive}(t) = \\zeta_{base} \\left(1 + e^{-r_{min} \\cdot t/\\tau}\\right)$$
-""")
+st.sidebar.markdown("---")
+st.sidebar.write("👤 **Developer:** Amine Rekab")
+st.sidebar.write("🆔 **Version:** 1.0.0")
+st.sidebar.write("📄 **License:** Apache 2.0")
 
 # ============================================================================
-# Main Simulation Area
+# Justice Cycle Function
 # ============================================================================
-st.header("🔄 Real-time Constitutional Learning Cycle")
+def run_justice_cycle(num_neurons: int = 20) -> tuple:
+    """
+    Simulate a single justice cycle:
+    1. Create neurons with random data
+    2. Assign unfair raw gradients (some very high, some very low)
+    3. Apply Zakat redistribution
+    4. Return neurons and collected amount
+    """
+    st.session_state.iteration += 1
+    
+    neurons = []
+    for i in range(num_neurons):
+        n = MizanValue(data=np.random.randn(), label=f"N{i}")
+        
+        # Simulate unfair raw gradients
+        if i < 5:  # First 5 neurons are "rich" (high gradients)
+            n.grad = np.random.exponential(3.0)
+        else:      # Remaining neurons are "poor" (low gradients)
+            n.grad = np.random.uniform(0, 0.3)
+        
+        # Simulate gradient history for entropy calculation
+        if i < 5:
+            n.grad_history = [np.random.uniform(5, 15) for _ in range(10)]
+        else:
+            n.grad_history = [np.random.uniform(0, 0.5) for _ in range(10)]
+        
+        neurons.append(n)
+    
+    # Apply Digital Zakat
+    collected = st.session_state.orchestrator.collect_and_distribute(neurons)
+    
+    return neurons, collected
 
-col1, col2 = st.columns([2, 1])
-
-with col1:
-    st.markdown("""
-    This simulation trains a small neural network (10 neurons) with:
-    - **Random raw gradients** (some intentionally exceed τ_tyr to trigger Al-Qist)
-    - **Constitutional backward pass** with Al-Qist dampening
-    - **Digital Zakat** redistribution from rich to poor neurons
-    - **Full audit trail** for every justice event
-    """)
+# ============================================================================
+# Run Justice Cycle Button
+# ============================================================================
+col1, col2, col3 = st.columns([1, 2, 1])
 
 with col2:
-    n_neurons = st.number_input("Number of Neurons", min_value=5, max_value=20, value=10, step=1)
-    n_steps = st.number_input("Training Steps", min_value=3, max_value=15, value=8, step=1)
+    if st.button("⚖️ Apply Constitutional Justice", type="primary", use_container_width=True):
+        neurons, last_collected = run_justice_cycle()
+        st.session_state.last_neurons = neurons
+        st.session_state.last_collected = last_collected
+        st.rerun()
 
 # ============================================================================
-# Run Simulation Button
+# Display Results
 # ============================================================================
-if st.button("🚀 Start Constitutional Learning Cycle", type="primary", use_container_width=True):
+if 'last_neurons' in st.session_state:
+    stats = st.session_state.orchestrator.get_statistics()
     
-    # Initialize orchestrator
-    orchestrator = ZakatOrchestrator(
-        poverty_threshold=poverty_threshold,
-        base_rate=zakat_rate,
-        tau_step=1000
-    )
-    
-    # Create neurons (MizanValue instances)
-    neurons = []
-    for i in range(n_neurons):
-        # Initialize with small random data
-        data = np.random.uniform(-1, 1)
-        neuron = MizanValue(
-            data, 
-            label=f"N{i}", 
-            tau_tyr=tau_tyr,
-            alpha=alpha,
-            beta=beta,
-            zakat_rate_base=zakat_rate
-        )
-        neurons.append(neuron)
-    
-    # Simulation history
-    history = []
-    gradients_before = []
-    gradients_after = []
-    
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    for step in range(n_steps):
-        status_text.markdown(f"**Step {step+1}/{n_steps}** – Computing gradients and applying constitutional justice...")
-        
-        # Simulate raw gradients (some intentionally large to test tyranny detection)
-        step_grads_before = []
-        step_grads_after = []
-        
-        for n in neurons:
-            # Generate raw gradient (some large, some small)
-            if np.random.random() < 0.3:  # 30% chance of "tyrannical" gradient
-                raw_grad = np.random.uniform(tau_tyr + 5, tau_tyr + 20)
-            else:
-                raw_grad = np.random.uniform(-5, 5)
-            
-            n.grad = raw_grad
-            step_grads_before.append(abs(raw_grad))
-            
-            # Apply Al-Qist (anti-tyranny)
-            n.apply_al_qist()
-            step_grads_after.append(abs(n.grad))
-        
-        gradients_before.append(step_grads_before)
-        gradients_after.append(step_grads_after)
-        
-        # Identify minority mask (for adaptive zakat)
-        # Simulate some neurons as "minority" based on entropy
-        entropies = [n.compute_entropy() for n in neurons]
-        minority_mask = [e < poverty_threshold for e in entropies]
-        minority_ratio = sum(minority_mask) / len(neurons)
-        
-        # Calculate adaptive zakat rate
-        current_zakat_rate = adaptive_zakat_rate(minority_ratio, step, tau=1000, base_rate=zakat_rate)
-        
-        # Perform collective redistribution (Zakat)
-        orchestrator.collect_and_distribute(neurons, minority_mask, current_zakat_rate)
-        
-        # Record history
-        for n in neurons:
-            history.append({
-                "Step": step,
-                "Label": n.label,
-                "Integrity Score": n.integrity_score,
-                "Tyranny Count": n.tyranny_count,
-                "Gradient After Justice": n.grad,
-                "Zakat Received": n.zakat_received,
-                "Zakat Given": n.zakat_given,
-                "Entropy": n.compute_entropy(),
-                "Is Poor": n.is_poor(poverty_threshold)
-            })
-        
-        progress_bar.progress((step + 1) / n_steps)
-        time.sleep(0.2)
-    
-    status_text.markdown("✅ **Constitutional learning cycle complete!**")
-    
-    # ========================================================================
-    # Display Results
-    # ========================================================================
-    df = pd.DataFrame(history)
-    
-    st.markdown("---")
-    st.header("📊 Simulation Results")
-    
-    # Summary metrics
+    # Metrics row
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        total_tyranny = df["Tyranny Count"].sum()
-        st.metric("⚔️ Total Tyranny Events", int(total_tyranny))
+        st.metric("💰 Total Zakat Collected", f"{stats.get('total_collected', 0):.4f}")
     with col2:
-        avg_integrity = df["Integrity Score"].mean()
-        st.metric("🌙 Avg Integrity Score", f"{avg_integrity:.3f}")
+        st.metric("📊 Current Iteration", st.session_state.iteration)
     with col3:
-        total_zakat_given = df["Zakat Given"].sum()
-        st.metric("🕌 Total Zakat Given", f"{total_zakat_given:.4f}")
+        if 'last_event' in stats and isinstance(stats['last_event'], dict):
+            rich = stats['last_event'].get('rich_count', 0)
+            poor = stats['last_event'].get('poor_count', 0)
+            st.metric("⚖️ Rich : Poor Ratio", f"{rich} : {poor}")
     with col4:
-        total_zakat_received = df["Zakat Received"].sum()
-        st.metric("💝 Total Zakat Received", f"{total_zakat_received:.4f}")
+        avg_rate = stats.get('average_zakat_rate', 0)
+        st.metric("🕌 Avg Zakat Rate", f"{avg_rate:.3%}")
     
-    # Integrity score over time
-    st.subheader("🛡️ Integrity Score Evolution")
-    st.markdown("*Integrity scores decrease when neurons exhibit tyrannical behavior (|grad| > τ_tyr)*")
-    
-    pivot_integrity = df.pivot(index="Step", columns="Label", values="Integrity Score")
-    st.line_chart(pivot_integrity)
-    
-    # Final zakat distribution
-    st.subheader("🕌 Digital Zakat Distribution (Final Step)")
-    st.markdown("*Poor neurons (low entropy) receive redistributed gradient capital from rich neurons*")
-    
-    final_step = df[df["Step"] == n_steps - 1]
-    zakat_df = final_step[["Label", "Zakat Received", "Zakat Given", "Is Poor"]].set_index("Label")
-    st.bar_chart(zakat_df[["Zakat Received", "Zakat Given"]])
-    
-    # Tyranny count by neuron
-    st.subheader("⚔️ Tyranny Count by Neuron")
-    st.markdown("*Neurons that repeatedly exceed the tyranny threshold accumulate counts and lose integrity*")
-    
-    tyranny_df = df.groupby("Label")["Tyranny Count"].max().reset_index()
-    tyranny_df.columns = ["Neuron", "Tyranny Count"]
-    st.bar_chart(tyranny_df.set_index("Neuron"))
-    
-    # Gradient dampening visualization
-    st.subheader("📉 Gradient Dampening Effect (Al-Qist)")
-    st.markdown("*How Al-Qist reduces tyrannical gradients*")
-    
-    # Aggregate gradient before/after
-    avg_before = [np.mean(g) for g in gradients_before]
-    avg_after = [np.mean(g) for g in gradients_after]
-    
-    dampen_df = pd.DataFrame({
-        "Step": range(n_steps),
-        "Before Al-Qist": avg_before,
-        "After Al-Qist": avg_after
-    })
-    st.line_chart(dampen_df.set_index("Step"))
-    
-    # Entropy distribution (poor vs rich)
-    st.subheader("📊 Information Entropy Distribution")
-    st.markdown("*Neurons with entropy < θ = {} are classified as 'poor' and receive zakat*".format(poverty_threshold))
-    
-    entropy_df = df[df["Step"] == n_steps - 1][["Label", "Entropy", "Is Poor"]]
-    fig, ax = plt.subplots(figsize=(8, 4))
-    colors = ["#E74C3C" if poor else "#27AE60" for poor in entropy_df["Is Poor"]]
-    ax.bar(entropy_df["Label"], entropy_df["Entropy"], color=colors)
-    ax.axhline(y=poverty_threshold, color="#2E86AB", linestyle="--", label=f"Poverty Threshold (θ={poverty_threshold})")
-    ax.set_ylabel("Entropy H(i)")
-    ax.set_title("Neuron Information Entropy")
-    ax.legend()
-    st.pyplot(fig)
-    
-    # ========================================================================
-    # Audit Trail
-    # ========================================================================
     st.divider()
-    with st.expander("📜 View Complete Constitutional Audit Trail", expanded=False):
-        st.dataframe(df)
+    
+    # Charts row
+    col_left, col_right = st.columns([2, 1])
+    
+    with col_left:
+        st.subheader("📊 Gradient Distribution (After Justice)")
+        grad_data = pd.DataFrame({
+            "Neuron": [n.label for n in st.session_state.last_neurons],
+            "Gradient Magnitude": [abs(n.grad) for n in st.session_state.last_neurons]
+        })
+        st.bar_chart(grad_data.set_index("Neuron"), color="#c5a059", height=400)
         
-        # Detailed audit per neuron
-        st.subheader("🔍 Per-Neuron Audit Details")
-        for neuron_label in df["Label"].unique():
-            neuron_df = df[df["Label"] == neuron_label]
-            with st.expander(f"Neuron: {neuron_label}"):
-                st.write(f"**Final Integrity Score:** {neuron_df['Integrity Score'].iloc[-1]:.4f}")
-                st.write(f"**Total Tyranny Count:** {neuron_df['Tyranny Count'].iloc[-1]}")
-                st.write(f"**Zakat Given:** {neuron_df['Zakat Given'].iloc[-1]:.4f}")
-                st.write(f"**Zakat Received:** {neuron_df['Zakat Received'].iloc[-1]:.4f}")
-                st.write(f"**Final Entropy:** {neuron_df['Entropy'].iloc[-1]:.4f}")
-                st.write(f"**Is Poor:** {neuron_df['Is Poor'].iloc[-1]}")
+        # Add explanation
+        st.caption("Blue bars show gradient magnitude after Zakat redistribution. "
+                   "Notice the balance between rich and poor neurons.")
     
-    # ========================================================================
-    # Conclusion
-    # ========================================================================
+    with col_right:
+        st.subheader("📜 Audit Trail (Live)")
+        logs = st.session_state.orchestrator.get_audit_trail()
+        if logs:
+            df_logs = pd.DataFrame(logs).tail(10)
+            display_cols = ['iteration', 'collected', 'rich_count', 'poor_count']
+            if all(c in df_logs.columns for c in display_cols):
+                st.dataframe(df_logs[display_cols], hide_index=True, use_container_width=True)
+            
+            # Last event details
+            last_event = logs[-1]
+            st.info(f"""
+            **Last Justice Event:**
+            - Iteration: {last_event.get('iteration', '-')}
+            - Zakat Rate: {last_event.get('zakat_rate', 0):.3%}
+            - Collected: {last_event.get('collected', 0):.4f}
+            - Rich: {last_event.get('rich_count', 0)} → Poor: {last_event.get('poor_count', 0)}
+            """)
+    
     st.divider()
-    st.success(f"""
-    ✅ **Constitutional Learning Cycle Completed Successfully**
     
-    - **Al-Qist** applied: Tyrannical gradients were automatically dampened ({int(total_tyranny)} events detected)
-    - **Digital Zakat** distributed: {total_zakat_given:.4f} gradient units redistributed from rich to poor neurons
-    - **Integrity Scores** adjusted dynamically based on behavioral history
-    - **Full Audit Trail** recorded for transparency and legal compliance
-    """)
+    # ========================================================================
+    # Mathematical Analysis Section
+    # ========================================================================
+    with st.expander("📐 View Mathematical Integrity Analysis", expanded=False):
+        st.subheader("Constitutional Formulas")
+        
+        st.latex(r"I(v) = \frac{1}{1 + \alpha \cdot TC + \beta \cdot \text{Var}(G)}")
+        st.caption("**Integrity Score:** As Tyranny Count (TC) increases, the neuron's influence is dampened.")
+        
+        st.latex(r"\zeta_{\text{adaptive}}(t) = \zeta_{\text{base}} \left(1 + \exp\left(-\frac{|S_{\text{min}}|}{|S_{\text{total}}|} \cdot \frac{t}{\tau}\right)\right)")
+        st.caption("**Adaptive Zakat Rate:** Dynamic adjustment for minority protection (τ = 1000).")
+        
+        st.latex(r"H(i) = -\sum_k p_k(a_i) \log p_k(a_i)")
+        st.caption("**Information Entropy:** Neurons with H(i) < θ are 'poor' and receive zakat.")
+        
+        st.divider()
+        
+        # Current statistics
+        st.subheader("Current Statistics")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.write("**Zakat Statistics:**")
+            st.write(f"- Total Collected: {stats.get('total_collected', 0):.4f}")
+            st.write(f"- Total Distributed: {stats.get('total_distributed', 0):.4f}")
+            st.write(f"- Number of Events: {stats.get('num_events', 0)}")
+        with col_b:
+            if 'last_event' in stats and isinstance(stats['last_event'], dict):
+                st.write("**Last Event Details:**")
+                st.write(f"- Zakat Rate: {stats['last_event'].get('zakat_rate', 0):.4f}")
+                st.write(f"- Rich Neurons: {stats['last_event'].get('rich_count', 0)}")
+                st.write(f"- Poor Neurons: {stats['last_event'].get('poor_count', 0)}")
+        
+        # Sample neuron audit
+        if 'last_neurons' in st.session_state:
+            st.subheader("Sample Neuron Audit")
+            sample_neuron = st.session_state.last_neurons[0]
+            st.json(sample_neuron.get_audit_trail())
     
 else:
-    st.info("👆 Press the button above to start the constitutional learning simulation and witness Al-Qist and Digital Zakat in action.")
+    st.info("👆 Click the **'Apply Constitutional Justice'** button above to start the simulation and witness Al-Qist and Digital Zakat in action.")
     
-    # Show preview of what will happen
+    # Preview section
     st.markdown("""
     ### 🧪 What to Expect
     
-    When you run the simulation, you will see:
+    When you run the simulation, the dashboard will:
     
-    1. **Random raw gradients** are generated for each neuron
-    2. **Al-Qist** detects any gradient exceeding `τ_tyr` and dampens it using the neuron's integrity score
-    3. **Digital Zakat** redistributes gradient wealth from "rich" (high-entropy) to "poor" (low-entropy) neurons
-    4. **Integrity scores** evolve over time based on each neuron's tyranny history
-    5. **Full audit trail** is recorded for every justice event
+    1. **Generate 20 neurons** with unfair raw gradient distribution (rich vs poor)
+    2. **Classify neurons** using information entropy (H(i) ≥ θ = rich, H(i) < θ = poor)
+    3. **Collect Digital Zakat** (ζ = 2.5%) from rich neurons
+    4. **Redistribute equally** to poor neurons
+    5. **Display visualizations** showing the balanced outcome
+    6. **Provide audit trail** of every justice event
     
-    The dashboard visualizes:
-    - Integrity score decay for tyrannical neurons
-    - Zakat redistribution amounts
-    - Entropy-based poverty classification
-    - Gradient dampening effectiveness
+    The result is a **decentralized learning process** where no single neuron dominates.
     """)
+
+# ============================================================================
+# Auto-Simulation (optional)
+# ============================================================================
+st.sidebar.markdown("---")
+st.sidebar.subheader("🤖 Automation")
+
+auto_run = st.sidebar.checkbox("▶️ Auto-Simulation Mode", value=st.session_state.auto_run)
+if auto_run != st.session_state.auto_run:
+    st.session_state.auto_run = auto_run
+    st.rerun()
+
+if st.session_state.auto_run:
+    progress_bar = st.sidebar.progress(0)
+    status_text = st.sidebar.empty()
+    
+    for i in range(5):
+        status_text.text(f"Running cycle {i+1}/5...")
+        neurons, collected = run_justice_cycle()
+        st.session_state.last_neurons = neurons
+        st.session_state.last_collected = collected
+        progress_bar.progress((i + 1) / 5)
+        time.sleep(1)
+    
+    status_text.text("✅ Auto-simulation complete!")
+    st.sidebar.session_state.auto_run = False
+    st.rerun()
 
 # ============================================================================
 # Footer
