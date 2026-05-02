@@ -89,6 +89,6 @@ with tab3:
     iterations = list(range(0, 2001, 100))
     rates = [adaptive_zakat_rate(minority_ratio, t) for t in iterations]
     fig = go.Figure()
-    fig.add_scatter(x=iterations, y=rates, mode="lines", name=f"ζ_adaptive")
+    fig.add_scatter(x=iterations, y=rates, mode="lines", name="ζ_adaptive")
     fig.add_hline(y=0.025, line_dash="dash", line_color="gray", annotation_text="Baseline ζ")
     st.plotly_chart(fig)
